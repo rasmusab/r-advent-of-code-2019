@@ -1,5 +1,9 @@
-Advent of Code 2019 in R 
-=============================
+---
+title: "Advent of Code 2019 in R "
+author: "Rasmus Bååth"
+output: github_document
+---
+
 
 Advent of Code is a fun creative coding challenge where there is a new coding challenge 
 each of the 25 day leading up to Christmas. Here are my solutionions using R. 
