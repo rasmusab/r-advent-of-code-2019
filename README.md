@@ -260,6 +260,60 @@ distances(orbits, v="YOU",to = "SAN") - 2
 
 ## Day 8 (<https://adventofcode.com/2019/day/8>)
 
+``` r
+library(tidyverse)
+# Part 1
+input = as.numeric(str_split(readLines("input/8.txt"), pattern = "")[[1]])
+n_cols = 25
+n_rows = 6
+n_frames <- length(input) / (n_cols * n_rows)
+image = expand_grid(frame = seq_len(n_frames), row = seq_len(n_rows), col = seq_len(n_cols)) %>% 
+  mutate(digit = input)
+image
+```
+
+    ## # A tibble: 15,000 x 4
+    ##    frame   row   col digit
+    ##    <int> <int> <int> <dbl>
+    ##  1     1     1     1     2
+    ##  2     1     1     2     2
+    ##  3     1     1     3     2
+    ##  4     1     1     4     2
+    ##  5     1     1     5     2
+    ##  6     1     1     6     2
+    ##  7     1     1     7     2
+    ##  8     1     1     8     2
+    ##  9     1     1     9     2
+    ## 10     1     1    10     2
+    ## # … with 14,990 more rows
+
+``` r
+image %>% 
+  count(frame, digit) %>% 
+  pivot_wider(names_from = digit, values_from = n, names_prefix = "n_") %>% 
+  arrange(n_0) %>% 
+  head(1) %>% 
+  mutate(answer = n_1 * n_2)
+```
+
+    ## # A tibble: 1 x 5
+    ##   frame   n_0   n_1   n_2 answer
+    ##   <int> <int> <int> <int>  <int>
+    ## 1     6     4    14   132   1848
+
+``` r
+# Part 2
+image %>% 
+  filter(digit != 2) %>% 
+  mutate(color = recode(digit, `0` = "black", `1` = "white")) %>% 
+  arrange(desc(frame)) %>% 
+  ggplot(aes(x = col, y = -row, fill = color)) +
+    geom_raster() +
+    scale_fill_identity()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
 ## Day 9 (<https://adventofcode.com/2019/day/9>)
 
 ## Day 10 (<https://adventofcode.com/2019/day/10>)

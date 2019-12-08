@@ -220,6 +220,35 @@ Day 7 (https://adventofcode.com/2019/day/7)
 Day 8 (https://adventofcode.com/2019/day/8)
 -------------------------------------------
 
+```{r, fig.height= 2, fig.width=6}
+library(tidyverse)
+# Part 1
+input = as.numeric(str_split(readLines("input/8.txt"), pattern = "")[[1]])
+n_cols = 25
+n_rows = 6
+n_frames <- length(input) / (n_cols * n_rows)
+image = expand_grid(frame = seq_len(n_frames), row = seq_len(n_rows), col = seq_len(n_cols)) %>% 
+  mutate(digit = input)
+image
+
+image %>% 
+  count(frame, digit) %>% 
+  pivot_wider(names_from = digit, values_from = n, names_prefix = "n_") %>% 
+  arrange(n_0) %>% 
+  head(1) %>% 
+  mutate(answer = n_1 * n_2)
+  
+# Part 2
+image %>% 
+  filter(digit != 2) %>% 
+  mutate(color = recode(digit, `0` = "black", `1` = "white")) %>% 
+  arrange(desc(frame)) %>% 
+  ggplot(aes(x = col, y = -row, fill = color)) +
+    geom_raster() +
+    scale_fill_identity()
+```
+
+
 Day 9 (https://adventofcode.com/2019/day/9)
 -------------------------------------------
 
