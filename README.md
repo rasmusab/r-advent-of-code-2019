@@ -99,6 +99,113 @@ expand.grid(noun = 0:99, verb = 0:99) %>%
 
 ## Day 3 (<https://adventofcode.com/2019/day/3>)
 
+``` r
+library(tidyverse)
+input <- readLines("input/3.txt") %>% 
+  str_split(",") %>% 
+  map_dfr( ~ tibble(stretch = seq_along(.x), dir_length = .x), .id = "wire") %>% 
+  extract(dir_length, c("direction", "length"), "([RUDL])(.+)", convert = TRUE)
+input
+```
+
+    ## # A tibble: 602 x 4
+    ##    wire  stretch direction length
+    ##    <chr>   <int> <chr>      <int>
+    ##  1 1           1 R            995
+    ##  2 1           2 U            671
+    ##  3 1           3 R            852
+    ##  4 1           4 U            741
+    ##  5 1           5 R            347
+    ##  6 1           6 U            539
+    ##  7 1           7 R            324
+    ##  8 1           8 U            865
+    ##  9 1           9 R            839
+    ## 10 1          10 U            885
+    ## # … with 592 more rows
+
+``` r
+create_path <- function(input, positions = tibble(x = 0, y = 0)) {
+  if(nrow(input) == 0) return(positions)
+  direction <- input$direction[1]
+  length <- input$length[1]
+  x = positions$x[nrow(positions)]
+  y = positions$y[nrow(positions)]
+  new_positions <- 
+    if(direction == "U") {
+      tibble(x, y = y + seq_len(length))
+    } else if(direction == "D") {
+      tibble(x, y = y - seq_len(length)) 
+    } else if(direction == "R") {
+      tibble(x = x + seq_len(length), y)
+    } else {
+      tibble(x = x - seq_len(length), y)
+    }
+  create_path(input[-1, ], rbind(positions, new_positions))
+}
+
+wire_paths <- input %>% 
+  group_by(wire) %>% 
+  group_modify(~ create_path(.x)) %>% 
+  mutate(step = row_number() - 1) %>% 
+  ungroup()
+
+n_wires = n_distinct(wire_paths$wire)
+closest_crossing <- wire_paths %>% 
+  filter(x != 0 & y != 0) %>% 
+  group_by(x, y) %>% 
+  filter(n_distinct(wire) >= n_wires) %>% 
+  mutate(distance = abs(x) + abs(y)) %>% 
+  arrange(distance) %>% 
+  head(1)
+closest_crossing
+```
+
+    ## # A tibble: 1 x 5
+    ## # Groups:   x, y [1]
+    ##   wire      x     y  step distance
+    ##   <chr> <dbl> <dbl> <dbl>    <dbl>
+    ## 1 1       562 -4757 96669     5319
+
+``` r
+ggplot(wire_paths, aes(x, y, color = wire)) +
+  geom_path() +
+  annotate("point", x = 0, y = 0) + 
+  annotate("point", x = closest_crossing$x, y = closest_crossing$y)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
+# Part 2
+
+closest_crossing <- wire_paths %>% 
+  filter(x != 0 & y != 0) %>% 
+  group_by(x, y) %>% 
+  filter(n_distinct(wire) >= n_wires) %>% 
+  group_by(wire, x, y) %>% 
+  summarise(step = min(step)) %>% 
+  group_by(x, y) %>% 
+  summarise(total_steps = sum(step)) %>% 
+  arrange(total_steps) %>% 
+  head(1)
+closest_crossing
+```
+
+    ## # A tibble: 1 x 3
+    ## # Groups:   x [1]
+    ##       x     y total_steps
+    ##   <dbl> <dbl>       <dbl>
+    ## 1   562 -5065      122514
+
+``` r
+ggplot(wire_paths, aes(x, y, color = wire)) +
+  geom_path() +
+  annotate("point", x = 0, y = 0) + 
+  annotate("point", x = closest_crossing$x, y = closest_crossing$y)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+
 ## Day 4 (<https://adventofcode.com/2019/day/4>)
 
 ``` r

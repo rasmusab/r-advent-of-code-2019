@@ -2,6 +2,8 @@
 title: "Advent of Code 2019 in R "
 author: "Rasmus Bååth"
 output: github_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -98,6 +100,77 @@ expand.grid(noun = 0:99, verb = 0:99) %>%
 
 Day 3 (https://adventofcode.com/2019/day/3)
 -------------------------------------------
+
+```{r}
+library(tidyverse)
+input <- readLines("input/3.txt") %>% 
+  str_split(",") %>% 
+  map_dfr( ~ tibble(stretch = seq_along(.x), dir_length = .x), .id = "wire") %>% 
+  extract(dir_length, c("direction", "length"), "([RUDL])(.+)", convert = TRUE)
+input
+
+
+create_path <- function(input, positions = tibble(x = 0, y = 0)) {
+  if(nrow(input) == 0) return(positions)
+  direction <- input$direction[1]
+  length <- input$length[1]
+  x = positions$x[nrow(positions)]
+  y = positions$y[nrow(positions)]
+  new_positions <- 
+    if(direction == "U") {
+      tibble(x, y = y + seq_len(length))
+    } else if(direction == "D") {
+      tibble(x, y = y - seq_len(length)) 
+    } else if(direction == "R") {
+      tibble(x = x + seq_len(length), y)
+    } else {
+      tibble(x = x - seq_len(length), y)
+    }
+  create_path(input[-1, ], rbind(positions, new_positions))
+}
+
+wire_paths <- input %>% 
+  group_by(wire) %>% 
+  group_modify(~ create_path(.x)) %>% 
+  mutate(step = row_number() - 1) %>% 
+  ungroup()
+
+n_wires = n_distinct(wire_paths$wire)
+closest_crossing <- wire_paths %>% 
+  filter(x != 0 & y != 0) %>% 
+  group_by(x, y) %>% 
+  filter(n_distinct(wire) >= n_wires) %>% 
+  mutate(distance = abs(x) + abs(y)) %>% 
+  arrange(distance) %>% 
+  head(1)
+closest_crossing
+
+ggplot(wire_paths, aes(x, y, color = wire)) +
+  geom_path() +
+  annotate("point", x = 0, y = 0) + 
+  annotate("point", x = closest_crossing$x, y = closest_crossing$y)
+
+# Part 2
+
+closest_crossing <- wire_paths %>% 
+  filter(x != 0 & y != 0) %>% 
+  group_by(x, y) %>% 
+  filter(n_distinct(wire) >= n_wires) %>% 
+  group_by(wire, x, y) %>% 
+  summarise(step = min(step)) %>% 
+  group_by(x, y) %>% 
+  summarise(total_steps = sum(step)) %>% 
+  arrange(total_steps) %>% 
+  head(1)
+closest_crossing
+  
+ggplot(wire_paths, aes(x, y, color = wire)) +
+  geom_path() +
+  annotate("point", x = 0, y = 0) + 
+  annotate("point", x = closest_crossing$x, y = closest_crossing$y)
+
+```
+
 
 Day 4 (https://adventofcode.com/2019/day/4)
 -------------------------------------------
